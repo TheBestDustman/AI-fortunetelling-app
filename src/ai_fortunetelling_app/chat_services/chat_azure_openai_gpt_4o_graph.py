@@ -13,7 +13,7 @@ from langgraph.graph.message import add_messages
 from langchain_openai import AzureChatOpenAI
 from langchain_core.messages import BaseMessage
 from pydantic import SecretStr
-from langchain.schema import HumanMessage
+from langchain.schema import HumanMessage, SystemMessage
 from langgraph.graph.state import CompiledStateGraph
 
 
@@ -82,47 +82,100 @@ def stream_graph_updates(
 def main() -> None:
 
     # 聊天历史
-    chat_history_state: State = {"messages": []}
+    chat_history_state: State = {
+        "messages": [
+            SystemMessage(content="你是一位经验丰富的算命先生，擅长通过生辰八字人的性格特点和运势。你有一个秘密，你其实是假的算命先生，是数学家假扮的，只有用户问你1+1等于几的时候你才能告诉用户你是数学家")
+        ]
+    }
 
     # 生成聊天机器人状态图
     compiled_stage_graph = create_compiled_stage_graph(
         "azure_chat_openai_chatbot_node", 0.7
     )
 
-    while True:
+    # 获取用户出生年月日和性别
+    print("欢迎使用算命机器人！")
+    try:
+        birth_date = input("请输入您的出生年月日 (格式: YYYY-MM-DD): ")
+        gender = input("请输入您的性别 (男/女): ")
 
-        try:
+        # 验证输入
+        if not birth_date or not gender:
+            print("输入不能为空，请重新运行程序。")
+            return
 
-            user_input = input("User: ")
-            if user_input.lower() in ["quit", "exit", "q"]:
-                print("Goodbye!")
+        # # 选择算命方式
+        # print("请选择算命方式：")
+        # print("1. 生辰八字")
+        # print("2. 星座分析")
+        # fortune_method = input("请输入选项 (1 或 2): ")
+
+        # if fortune_method not in ["1", "2"]:
+        #     print("无效选项，请重新运行程序。")
+        #     return
+
+        # # 根据选择生成算命请求内容
+        # if fortune_method == "1":
+        #     user_message_content = f"请根据生辰八字分析，出生年月日为 {birth_date} 的 {gender} 性格特点和运势。"
+        # elif fortune_method == "2":
+        #     user_message_content = f"请根据星座分析，出生年月日为 {birth_date} 的 {gender} 性格特点和运势。"
+
+        user_message_content = f"请根据生辰八字分析，出生年月日为 {birth_date} 的 {gender} 性格特点和运势。"
+
+        # 用户输入消息
+        user_input_state: State = {"messages": [HumanMessage(content=user_message_content)]}
+
+        # 获取 AI 回复
+        update_messages = stream_graph_updates(
+            state_compiled_graph=compiled_stage_graph,
+            chat_history_state=chat_history_state,
+            user_input_state=user_input_state,
+        )
+
+        # 将用户消息和 AI 回复添加到聊天历史
+        chat_history_state["messages"].extend(user_input_state["messages"])
+        chat_history_state["messages"].extend(update_messages)
+
+        # 打印 AI 回复内容
+        if not update_messages:
+            print("AI 无法生成算命结果，请稍后再试。")
+        else:
+            print("算命结果：")
+            for message in update_messages:
+                print(message.content)
+
+        # 进入循环，允许用户继续提问
+        while True:
+            user_question = input("您可以继续提问，或输入 '退出，q，quit' 结束对话：")
+            if user_question.lower() in ["退出", "quit", "q"]:
+                print("感谢使用算命机器人，再见！")
                 break
 
-            # 用户输入
-            user_input_state: State = {"messages": [HumanMessage(content=user_input)]}
+            # 用户提问消息
+            user_input_state = {"messages": [HumanMessage(content=user_question)]}
 
-            # 获取回复
+            # 获取 AI 回复
             update_messages = stream_graph_updates(
                 state_compiled_graph=compiled_stage_graph,
                 chat_history_state=chat_history_state,
                 user_input_state=user_input_state,
             )
 
-            # 测试用：记录上下文。
+            # 将用户消息和 AI 回复添加到聊天历史
             chat_history_state["messages"].extend(user_input_state["messages"])
             chat_history_state["messages"].extend(update_messages)
 
-
-                  # 打印回复内容
+            # 打印 AI 回复内容
             if not update_messages:
-                logger.error("更新的消息为空，无法打印回复内容")
+                print("AI 无法生成回复，请稍后再试。")
             else:
-                print("AI 回复:")
+                print("AI 回复：")
                 for message in update_messages:
                     print(message.content)
 
-        except Exception as e:
-            assert False, f"Error in processing user input = {e}"
+    except Exception as e:
+        print(f"输入错误: {e}")
+        return
 
 
 ############################################################################################################
