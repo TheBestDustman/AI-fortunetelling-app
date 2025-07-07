@@ -12,10 +12,23 @@ from langgraph.graph import StateGraph
 from langgraph.graph.message import add_messages
 from langchain_openai import AzureChatOpenAI
 from langchain_core.messages import BaseMessage
-from pydantic import SecretStr
+from pydantic import SecretStr, Field
 from langchain.schema import HumanMessage, SystemMessage
 from langgraph.graph.state import CompiledStateGraph
+from pydantic import BaseModel, ValidationError, constr
+from datetime import datetime
 
+############################################################################################################
+# 定义用户输入数据模型
+class UserInput(BaseModel):
+    birth_date: str  # 出生年月日，格式为 YYYY-MM-DD
+    # gender: str = Field(..., pattern="^(男|女)$")  # 性别，只能是 '男' 或 '女'
+
+    def validate_birth_date(self):
+        try:
+            datetime.strptime(self.birth_date, "%Y-%m-%d")
+        except ValueError:
+            raise ValueError("出生年月日格式错误，应为 YYYY-MM-DD")
 
 ############################################################################################################
 class State(TypedDict):
@@ -97,10 +110,10 @@ def main() -> None:
     logger.info("欢迎使用算命机器人！")
     try:
         birth_date = input("请输入您的出生年月日 (格式: YYYY-MM-DD): ")
-        gender = input("请输入您的性别 (男/女): ")
+        # gender = input("请输入您的性别 (男/女): ")
 
         # 验证输入
-        if not birth_date or not gender:
+        if not birth_date :
             logger.warning("输入不能为空，请重新运行程序。")
             return
 
@@ -120,7 +133,7 @@ def main() -> None:
         # elif fortune_method == "2":
         #     user_message_content = f"请根据星座分析，出生年月日为 {birth_date} 的 {gender} 性格特点和运势。"
 
-        user_message_content = f"请根据生辰八字分析，出生年月日为 {birth_date} 的 {gender} 性格特点和运势。"
+        user_message_content = f"请根据生辰八字分析，出生年月日为 {birth_date} 的人的性格特点和运势。"
 
         # 用户输入消息
         user_input_state: State = {"messages": [HumanMessage(content=user_message_content)]}
