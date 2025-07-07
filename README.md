@@ -30,8 +30,6 @@ conda activate first_seed
 pip install -e .
 ```
 
-
-
 ### 2. VS Code 配置
 
 如果使用 VS Code 进行开发：
@@ -39,3 +37,6 @@ pip install -e .
 1. 打开命令面板 (`Cmd+Shift+P`)
 2. 选择 `Python: Select Interpreter`
 3. 选择 conda 环境路径：`/Users/your-username/anaconda3/envs/first_seed/bin/python`
+
+
+### 3. 

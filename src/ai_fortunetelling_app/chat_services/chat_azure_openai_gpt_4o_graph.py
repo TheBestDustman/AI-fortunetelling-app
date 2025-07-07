@@ -94,24 +94,24 @@ def main() -> None:
     )
 
     # 获取用户出生年月日和性别
-    print("欢迎使用算命机器人！")
+    logger.info("欢迎使用算命机器人！")
     try:
         birth_date = input("请输入您的出生年月日 (格式: YYYY-MM-DD): ")
         gender = input("请输入您的性别 (男/女): ")
 
         # 验证输入
         if not birth_date or not gender:
-            print("输入不能为空，请重新运行程序。")
+            logger.warning("输入不能为空，请重新运行程序。")
             return
 
         # # 选择算命方式
-        # print("请选择算命方式：")
-        # print("1. 生辰八字")
-        # print("2. 星座分析")
+        # logger.info("请选择算命方式：")
+        # logger.info("1. 生辰八字")
+        # logger.info("2. 星座分析")
         # fortune_method = input("请输入选项 (1 或 2): ")
 
         # if fortune_method not in ["1", "2"]:
-        #     print("无效选项，请重新运行程序。")
+        #     logger.warning("无效选项，请重新运行程序。")
         #     return
 
         # # 根据选择生成算命请求内容
@@ -138,17 +138,17 @@ def main() -> None:
 
         # 打印 AI 回复内容
         if not update_messages:
-            print("AI 无法生成算命结果，请稍后再试。")
+            logger.warning("AI 无法生成算命结果，请稍后再试。")
         else:
-            print("算命结果：")
+            logger.info("算命结果：")
             for message in update_messages:
-                print(message.content)
+                logger.info(message.content)
 
         # 进入循环，允许用户继续提问
         while True:
             user_question = input("您可以继续提问，或输入 '退出，q，quit' 结束对话：")
             if user_question.lower() in ["退出", "quit", "q"]:
-                print("感谢使用算命机器人，再见！")
+                logger.info("感谢使用算命机器人，再见！")
                 break
 
             # 用户提问消息
@@ -167,14 +167,14 @@ def main() -> None:
 
             # 打印 AI 回复内容
             if not update_messages:
-                print("AI 无法生成回复，请稍后再试。")
+                logger.warning("AI 无法生成回复，请稍后再试。")
             else:
-                print("AI 回复：")
+                logger.info("AI 回复：")
                 for message in update_messages:
-                    print(message.content)
+                    logger.info(message.content)
 
     except Exception as e:
-        print(f"输入错误: {e}")
+        logger.error(f"输入错误: {e}")
         return
 
 
